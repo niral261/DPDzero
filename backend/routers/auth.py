@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,10 +9,14 @@ import datetime
 from database.db import get_db
 from models.user import User, RoleEnum
 from schemas import user as user_schema
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 router = APIRouter()
 
-SECRET_KEY = "your-secret-key"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 3600
 
