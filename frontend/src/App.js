@@ -30,12 +30,29 @@ const theme = createTheme({
 
 function App() {
   const [isAuthenticated, isUserAuthenticated] = useState(false);
+  const { user } = useContext(UserContext);
 
   return (
     <ThemeProvider theme={theme}>
       <UserProvider>
         <Router>
           <Routes>
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  user && user.role === "manager" ? (
+                    <Navigate to="/manager/dashboard" replace />
+                  ) : user && user.role === "employee" ? (
+                    <Navigate to="/employee/dashboard" replace />
+                  ) : (
+                    <Navigate to="/signin" replace />
+                  )
+                ) : (
+                  <Navigate to="/signin" replace />
+                )
+              }
+            />
             <Route
               path="/signin"
               element={<AuthScreen isUserAuthenticated={isUserAuthenticated} />}
