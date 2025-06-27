@@ -217,6 +217,7 @@ async def export_feedback_pdf(feedback_id: int, db: AsyncSession = Depends(get_d
     p.drawString(72, y, f"Tags: {', '.join(tags) if tags else '-'}")
     y -= 20
     p.drawString(72, y, f"Given By: {manager.name}")
+    p.drawString(72, y, f"Given By: {manager.name}")
     y -= 20
     p.drawString(
         72, y, f"Acknowledged: {'Yes' if bool(feedback.acknowledged) else 'No'}"
