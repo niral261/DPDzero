@@ -25,10 +25,15 @@ async def create_activity_log(
 @router.get("/manager/{manager_id}/activities", response_model=list[ActivityLogSchema])
 async def get_manager_activities(manager_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(ActivityLog)
+        select(ActivityLog, User)
+        .join(User, ActivityLog.user_id == User.id)
         .where(ActivityLog.manager_id == manager_id)
         .order_by(desc(ActivityLog.timestamp))
         .limit(5)
     )
-    activities = result.scalars().all()
+    activities = []
+    for activity, user in result.all():
+        activity_dict = activity.__dict__.copy()
+        activity_dict["user_name"] = user.name
+        activities.append(activity_dict)
     return activities

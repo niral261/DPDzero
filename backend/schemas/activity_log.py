@@ -13,6 +13,7 @@ class ActivityLogCreate(BaseModel):
 class ActivityLogSchema(BaseModel):
     id: int
     user_id: int
+    user_name: str
     manager_id: int | None = None
     action: str
     target: str | None = None

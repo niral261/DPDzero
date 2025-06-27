@@ -24,75 +24,68 @@ export default function ManagerDashboard() {
   const [loadingSentiment, setLoadingSentiment] = useState(true);
   const [loadingActivities, setLoadingActivities] = useState(true);
 
-  useEffect(() => {
-    const fetchSummary = async () => {
-      if (!user || !user.id) return;
-      setSummary((s) => ({ ...s, loading: true }));
-      try {
-        const token = getTokenCookie();
-        const headers = {
+  const fetchSummary = async () => {
+    if (!user || !user.id) return;
+    setSummary((s) => ({ ...s, loading: true }));
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getTokenCookie()}`,
+      };
+      const [
+        totalFeedbackRes,
+        responseRateRes,
+        avgSentimentRes,
+        pendingAckRes,
+      ] = await Promise.all([
+        fetch(`${API_URL}/manager/${user.id}/feedbacks/count`, { headers }),
+        fetch(`${API_URL}/manager/${user.id}/team/response-rate`, { headers }),
+        fetch(`${API_URL}/manager/${user.id}/feedbacks/average-sentiment`, { headers }),
+        fetch(`${API_URL}/manager/${user.id}/feedbacks/pending-ack`, { headers }),
+      ]);
+      const totalFeedback = (await totalFeedbackRes.json()).total_feedback_given || 0;
+      const responseRate = (await responseRateRes.json()).response_rate || 0;
+      const avgSentiment = (await avgSentimentRes.json()).average_sentiment || 0;
+      const pendingAck = (await pendingAckRes.json()).pending_acknowledgments || 0;
+      setSummary({
+        totalFeedback,
+        responseRate,
+        avgSentiment,
+        pendingAck,
+        loading: false,
+      });
+    } catch (err) {
+      setSummary((summary) => ({ ...summary, loading: false }));
+    }
+  };
+
+  const fetchEmployees = async () => {
+    if (!user || !user.id) return;
+    try {
+      const res = await fetch(`${API_URL}/manager/${user.id}/employees`, {
+        headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getTokenCookie()}`,
-        };
-        const [
-          totalFeedbackRes,
-          responseRateRes,
-          avgSentimentRes,
-          pendingAckRes,
-        ] = await Promise.all([
-          fetch(`${API_URL}/manager/${user.id}/feedbacks/count`, { headers }),
-          fetch(`${API_URL}/manager/${user.id}/team/response-rate`, {
-            headers,
-          }),
-          fetch(`${API_URL}/manager/${user.id}/feedbacks/average-sentiment`, {
-            headers,
-          }),
-          fetch(`${API_URL}/manager/${user.id}/feedbacks/pending-ack`, {
-            headers,
-          }),
-        ]);
-        const totalFeedback =
-          (await totalFeedbackRes.json()).total_feedback_given || 0;
-        const responseRate = (await responseRateRes.json()).response_rate || 0;
-        const avgSentiment =
-          (await avgSentimentRes.json()).average_sentiment || 0;
-        const pendingAck =
-          (await pendingAckRes.json()).pending_acknowledgments || 0;
-        setSummary({
-          totalFeedback,
-          responseRate,
-          avgSentiment,
-          pendingAck,
-          loading: false,
-        });
-      } catch (err) {
-        setSummary((summary) => ({ ...summary, loading: false }));
-      }
-    };
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to fetch employees");
+      setEmployees(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setEmployees([]);
+    }
+  };
+
+  useEffect(() => {
     fetchSummary();
+    // eslint-disable-next-line
   }, [user]);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      if (!user || !user.id) return;
-      try {
-        const res = await fetch(`${API_URL}/manager/${user.id}/employees`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getTokenCookie()}`,
-          },
-        });
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.detail || "Failed to fetch employees");
-        setEmployees(data);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-        setEmployees([]);
-      }
-    };
     fetchEmployees();
+    // eslint-disable-next-line
   }, [user]);
 
   useEffect(() => {
@@ -497,12 +490,12 @@ export default function ManagerDashboard() {
                 icon = "✓";
                 color = "#22c55e";
                 bgcolor = "#22c55e22";
-                text = `Feedback acknowledged by employee`;
+                text = `Feedback acknowledged by ${act.user_name}`;
               } else if (act.action === "requested_feedback") {
                 icon = "⧗";
                 color = "#ff4f81";
                 bgcolor = "#ff4f8122";
-                text = `Feedback requested from manager`;
+                text = `Feedback request from ${act.user_name}`;
               }
               const date = new Date(act.timestamp).toLocaleString();
 

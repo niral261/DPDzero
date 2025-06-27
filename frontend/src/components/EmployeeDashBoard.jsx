@@ -26,6 +26,65 @@ export default function EmployeeDashboard() {
   });
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const fetchSummary = async () => {
+    if (!user || !user.id) return;
+    setSummary((s) => ({ ...s, loading: true }));
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getTokenCookie()}`,
+      };
+      const [
+        feedbackReceivedRes,
+        pendingAckRes,
+        ackRateRes,
+        avgSentimentRes,
+      ] = await Promise.all([
+        fetch(`${API_URL}/employee/${user.id}/feedbacks/count`, { headers }),
+        fetch(`${API_URL}/employee/${user.id}/feedbacks/pending-ack`, { headers }),
+        fetch(`${API_URL}/employee/${user.id}/feedbacks/ack-rate`, { headers }),
+        fetch(`${API_URL}/employee/${user.id}/feedbacks/average-sentiment`, { headers }),
+      ]);
+      const feedbackReceived = (await feedbackReceivedRes.json()).feedback_received || 0;
+      const pendingAck = (await pendingAckRes.json()).pending_acknowledgments || 0;
+      const ackRate = (await ackRateRes.json()).acknowledgment_rate || 0;
+      const avgSentiment = (await avgSentimentRes.json()).average_sentiment || 0;
+      setSummary({
+        feedbackReceived,
+        pendingAck,
+        ackRate,
+        avgSentiment,
+        loading: false,
+      });
+    } catch (err) {
+      setSummary((summary) => ({ ...summary, loading: false }));
+    }
+  };
+
+  const fetchFeedbacks = async () => {
+    if (!user || !user.name) return;
+    setLoadingFeedbacks(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/employee/${encodeURIComponent(user.name)}/feedbacks`,
+        {
+          headers: {
+            Authorization: `Bearer ${getTokenCookie()}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to fetch feedbacks");
+      setFeedbacks(data);
+      setFeedbacksError(null);
+    } catch (err) {
+      setFeedbacksError(err.message);
+      setFeedbacks([]);
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  };
+
   const handleRequestFeedback = async () => {
     try {
       const res = await fetch(`${API_URL}/feedback/request`, {
@@ -37,13 +96,14 @@ export default function EmployeeDashboard() {
         body: JSON.stringify({ member: user.name }),
       });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.detail || "Request failed");
       setSnackbar({
         open: true,
         message: "Feedback request sent!",
         severity: "success",
       });
+      fetchSummary();
+      fetchFeedbacks();
     } catch (err) {
       setSnackbar({ open: true, message: err.message, severity: "error" });
     }
@@ -68,6 +128,8 @@ export default function EmployeeDashboard() {
         message: "Feedback acknowledged!",
         severity: "success",
       });
+      fetchSummary();
+      fetchFeedbacks();
     } catch (err) {
       setSnackbar({ open: true, message: err.message, severity: "error" });
     }
@@ -96,80 +158,13 @@ export default function EmployeeDashboard() {
   };
 
   useEffect(() => {
-    if (!user || !user.id) return;
-    setSummary((s) => ({ ...s, loading: true }));
-    const fetchSummary = async () => {
-      try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getTokenCookie()}`,
-        };
-        const [
-          feedbackReceivedRes,
-          pendingAckRes,
-          ackRateRes,
-          avgSentimentRes,
-        ] = await Promise.all([
-          fetch(`${API_URL}/employee/${user.id}/feedbacks/count`, { headers }),
-          fetch(`${API_URL}/employee/${user.id}/feedbacks/pending-ack`, {
-            headers,
-          }),
-          fetch(`${API_URL}/employee/${user.id}/feedbacks/ack-rate`, {
-            headers,
-          }),
-          fetch(`${API_URL}/employee/${user.id}/feedbacks/average-sentiment`, {
-            headers,
-          }),
-        ]);
-        const feedbackReceived =
-          (await feedbackReceivedRes.json()).feedback_received || 0;
-        const pendingAck =
-          (await pendingAckRes.json()).pending_acknowledgments || 0;
-        const ackRate = (await ackRateRes.json()).acknowledgment_rate || 0;
-        const avgSentiment =
-          (await avgSentimentRes.json()).average_sentiment || 0;
-        setSummary({
-          feedbackReceived,
-          pendingAck,
-          ackRate,
-          avgSentiment,
-          loading: false,
-        });
-      } catch (err) {
-        setSummary((summary) => ({ ...summary, loading: false }));
-      }
-    };
     fetchSummary();
+    // eslint-disable-next-line
   }, [user]);
 
   useEffect(() => {
-    if (!user || !user.name) return;
-    const fetchFeedbacks = async () => {
-      setLoadingFeedbacks(true);
-      try {
-        const res = await fetch(
-          `${API_URL}/employee/${encodeURIComponent(user.name)}/feedbacks`,
-          {
-            headers: {
-              Authorization: `Bearer ${getTokenCookie()}`,
-            },
-          }
-        );
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.detail || "Failed to fetch feedbacks");
-        setFeedbacks(data);
-        setFeedbacksError(null);
-      } catch (err) {
-        setFeedbacksError(err.message);
-        setFeedbacks([]);
-      } finally {
-        setLoadingFeedbacks(false);
-      }
-    };
     fetchFeedbacks();
+    // eslint-disable-next-line
   }, [user]);
 
   return (

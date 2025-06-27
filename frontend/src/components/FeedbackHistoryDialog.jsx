@@ -46,7 +46,7 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
   };
 
   const handleEditSave = async (fb) => {
-    const res = await fetch(`/api/feedback/${fb.id}`, {
+    const res = await fetch(`${API_URL}/feedback/${fb.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
 
   const handleExportPDF = async (fb) => {
     try {
-      const res = await fetch(`/api/feedback/${fb.id}/export-pdf`, {
+      const res = await fetch(`${API_URL}/feedback/${fb.id}/export-pdf`, {
         headers: {
           Authorization: `Bearer ${getTokenCookie()}`,
         },
