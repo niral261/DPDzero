@@ -15,17 +15,19 @@ import {
   FormHelperText,
   Chip,
   Alert,
-  Snackbar
+  Snackbar,
 } from "@mui/material";
 import { UserContext } from "../context/UserProvider";
-import { API_URL } from "../api";
-
-
+import { API_URL, getTokenCookie } from "../api";
 
 function NewFeedbackDialog({ open, onClose, team, employeeId }) {
   const { user } = useContext(UserContext);
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const [member, setMember] = useState("");
   const [strengths, setStrengths] = useState("");
   const [improvement, setImprovement] = useState("");
@@ -43,22 +45,26 @@ function NewFeedbackDialog({ open, onClose, team, employeeId }) {
   ];
 
   const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') return;
+    if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
 
   const handleSubmit = async () => {
-    if(!member || !strengths || !improvement || !sentiment) {
-      setSnackbar({ open: true, message: "Please fill all the fields apart from Tags", severity: "error" });
+    if (!member || !strengths || !improvement || !sentiment) {
+      setSnackbar({
+        open: true,
+        message: "Please fill all the fields apart from Tags",
+        severity: "error",
+      });
       return;
     }
 
-    try{
+    try {
       const res = await fetch(`${API_URL}/feedback`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${getTokenCookie()}`,
         },
         body: JSON.stringify({
           member,
@@ -67,22 +73,21 @@ function NewFeedbackDialog({ open, onClose, team, employeeId }) {
           sentiment,
           tags,
           given_by: user.id,
-          acknowledged: false
-        })
+          acknowledged: false,
+        }),
       });
 
       const data = await res.json();
-      if (!res.ok) 
-        throw new Error(data.detail || "Failed to submit feedback");
+      if (!res.ok) throw new Error(data.detail || "Failed to submit feedback");
       else {
         await fetch(`${API_URL}/feedback_request/complete`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getTokenCookie()}`,
           },
           body: JSON.stringify({ employee: member, manager_id: user.id }),
-        })
+        });
       }
       setMember("");
       setStrengths("");
@@ -90,11 +95,14 @@ function NewFeedbackDialog({ open, onClose, team, employeeId }) {
       setSentiment("");
       setTags([]);
       onClose();
-      setSnackbar({ open: true, message: "Feedback submitted!", severity: "success" });
+      setSnackbar({
+        open: true,
+        message: "Feedback submitted!",
+        severity: "success",
+      });
     } catch (err) {
       setSnackbar({ open: true, message: err.message, severity: "error" });
     }
-
   };
 
   return (
@@ -203,7 +211,9 @@ function NewFeedbackDialog({ open, onClose, team, employeeId }) {
                 sx={{
                   borderRadius: "16px",
                   borderColor: "#2563eb",
-                  background: tags.includes(tag) ? "linear-gradient(135deg, #2563eb, #ff4f81)" : "#fff",
+                  background: tags.includes(tag)
+                    ? "linear-gradient(135deg, #2563eb, #ff4f81)"
+                    : "#fff",
                   color: tags.includes(tag) ? "#fff" : "#808080",
                   "&:hover": {
                     backgroundColor: tags.includes(tag) ? "#1746a2" : "#f0f8ff",
@@ -239,9 +249,15 @@ function NewFeedbackDialog({ open, onClose, team, employeeId }) {
           open={snackbar.open}
           autoHideDuration={3000}
           onClose={handleSnackbarClose}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
-          <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }} elevation={6} variant="filled">
+          <Alert
+            onClose={handleSnackbarClose}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+            elevation={6}
+            variant="filled"
+          >
             {snackbar.message}
           </Alert>
         </Snackbar>

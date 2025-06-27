@@ -1,7 +1,19 @@
 import React, { useContext, useState } from "react";
-import { Dialog, DialogTitle, DialogContent, IconButton, Typography, Paper, Box, Button, TextField, MenuItem } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Typography,
+  Paper,
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { UserContext } from "../context/UserProvider";
+import { getTokenCookie, API_URL } from "../api";
 
 const sentimentOptions = [
   { value: "Positive", label: "Positive" },
@@ -13,6 +25,11 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
   const { user } = useContext(UserContext);
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const handleEditClick = (fb) => {
     setEditId(fb.id);
@@ -29,10 +46,12 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
   };
 
   const handleEditSave = async (fb) => {
-    // Call PUT API here
     const res = await fetch(`/api/feedback/${fb.id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getTokenCookie()}`,
+      },
       body: JSON.stringify({
         strengths: editData.strengths,
         improvement: editData.improvement,
@@ -42,20 +61,58 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
     });
     if (res.ok) {
       setEditId(null);
-      if (typeof onClose === "function") onClose(); // Optionally refresh
+      if (typeof onClose === "function") onClose();
+    }
+  };
+
+  const handleExportPDF = async (fb) => {
+    try {
+      const res = await fetch(`/api/feedback/${fb.id}/export-pdf`, {
+        headers: {
+          Authorization: `Bearer ${getTokenCookie()}`,
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to export PDF");
+      }
+      const blob = await res.blob();
+      let filename = `feedback_from_${fb.given_by}_to_${fb.member}.pdf`;
+      const disposition = res.headers.get("Content-Disposition");
+      if (disposition && disposition.indexOf("filename=") !== -1) {
+        filename = disposition.split("filename=")[1].replace(/['"]/g, "");
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message, severity: "error" });
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ bgcolor: "#FEF7F2", color: "#ED5F00", fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle
+        sx={{
+          bgcolor: "#FEF7F2",
+          color: "#ED5F00",
+          fontWeight: 700,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         Feedback History
         <IconButton onClick={onClose} size="small" sx={{ color: "#ED5F00" }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ bgcolor: "#FEF7F2", minHeight: 400 }}>
-        {(!feedbacks || feedbacks.length === 0) ? (
+        {!feedbacks || feedbacks.length === 0 ? (
           <Typography color="text.secondary" align="center" mt={4}>
             No feedbacks yet.
           </Typography>
@@ -74,7 +131,14 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
                 boxShadow: 1,
               }}
             >
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1,
+                }}
+              >
                 <Typography fontSize={13} color="#888">
                   {user?.role === "manager"
                     ? `Employee: ${fb.member}`
@@ -136,7 +200,11 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
                     margin="dense"
                   />
                   <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                    <Button variant="contained" color="primary" onClick={() => handleEditSave(fb)}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => handleEditSave(fb)}
+                    >
                       Save
                     </Button>
                     <Button variant="outlined" onClick={() => setEditId(null)}>
@@ -152,29 +220,36 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
                     <b>Improvement:</b> {fb.improvement}
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                    {fb.tags && fb.tags.map((tag, idx) => (
-                      <Button
-                        key={idx}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          bgcolor: "#f7f5fd",
-                          color: "#2b2a61",
-                          borderColor: "#2b216a",
-                          borderRadius: 6,
-                          fontWeight: 600,
-                          px: 1.5,
-                          py: 0.25,
-                          pointerEvents: "none",
-                        }}
-                      >
-                        {tag}
-                      </Button>
-                    ))}
+                    {fb.tags &&
+                      fb.tags.map((tag, idx) => (
+                        <Button
+                          key={idx}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            bgcolor: "#f7f5fd",
+                            color: "#2b2a61",
+                            borderColor: "#2b216a",
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            px: 1.5,
+                            py: 0.25,
+                            pointerEvents: "none",
+                          }}
+                        >
+                          {tag}
+                        </Button>
+                      ))}
                   </Box>
                 </>
               )}
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Typography fontSize={13} color="#888">
                   {(() => {
                     const d = new Date(fb.created_at);
@@ -191,7 +266,7 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
                       color: "#9C2BAD",
                       borderColor: "#9C2BAD",
                     }}
-                    onClick={() => window.open(`/api/feedback/${fb.id}/export-pdf`, "_blank")}
+                    onClick={() => handleExportPDF(fb)}
                   >
                     Export as PDF
                   </Button>
@@ -226,4 +301,4 @@ export default function FeedbackHistoryDialog({ open, onClose, feedbacks }) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

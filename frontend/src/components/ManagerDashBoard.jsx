@@ -1,14 +1,10 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Box, Typography, Paper, Avatar, Divider, Button } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import GroupIcon from "@mui/icons-material/Group";
-import ChatIcon from "@mui/icons-material/Chat";
-import SettingsIcon from "@mui/icons-material/Settings";
 import NewFeedbackDialog from "./NewFeedbackDialog";
 import HeaderBar from "./HeaderBar";
 import VerticalSidebar from "./VerticalSidebar";
 import { UserContext } from "../context/UserProvider";
-import { API_URL } from "../api";
+import { API_URL, getTokenCookie } from "../api";
 import SentimentTrendChart from "./SentimentTrendChart";
 
 export default function ManagerDashboard() {
@@ -33,11 +29,10 @@ export default function ManagerDashboard() {
       if (!user || !user.id) return;
       setSummary((s) => ({ ...s, loading: true }));
       try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const token = getTokenCookie();
         const headers = {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getTokenCookie()}`,
         };
         const [
           totalFeedbackRes,
@@ -84,7 +79,7 @@ export default function ManagerDashboard() {
         const res = await fetch(`${API_URL}/manager/${user.id}/employees`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getTokenCookie()}`,
           },
         });
         const data = await res.json();
@@ -105,7 +100,7 @@ export default function ManagerDashboard() {
     setLoadingSentiment(true);
     fetch(`${API_URL}/manager/${user.id}/feedbacks/sentiment-trends`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${getTokenCookie()}`,
       },
     })
       .then((res) => res.json())
@@ -114,15 +109,13 @@ export default function ManagerDashboard() {
       .finally(() => setLoadingSentiment(false));
   }, [user]);
 
-
   useEffect(() => {
-    if (!user || !user.id) 
-      return;
+    if (!user || !user.id) return;
     setLoadingActivities(true);
     fetch(`${API_URL}/manager/${user.id}/activities`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${getTokenCookie()}`,
       },
     })
       .then(async (res) => {
@@ -345,7 +338,7 @@ export default function ManagerDashboard() {
           </Box>
         </Box>
 
-        <Box 
+        <Box
           sx={{
             border: "1px solid #e0e0e0",
             borderRadius: 3,
@@ -353,7 +346,13 @@ export default function ManagerDashboard() {
             zIndex: 1000,
           }}
         >
-          <Typography variant="h6" fontWeight={700} mt={2} mb={2} color="#ff4f81">
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            mt={2}
+            mb={2}
+            color="#ff4f81"
+          >
             Team Sentiment Trends
           </Typography>
           <Box
@@ -374,7 +373,6 @@ export default function ManagerDashboard() {
           </Box>
         </Box>
 
-        
         <Typography variant="h6" fontWeight={700} mt={2} mb={2} color="#ff4f81">
           Team Members
         </Typography>
@@ -463,7 +461,7 @@ export default function ManagerDashboard() {
         </Box>
 
         {/* Recent Activity */}
-        <Box 
+        <Box
           sx={{
             border: "1px solid #e0e0e0",
             borderRadius: 3,
@@ -471,7 +469,13 @@ export default function ManagerDashboard() {
             zIndex: 1000,
           }}
         >
-          <Typography variant="h6" fontWeight={700} mt={3} mb={2} color="#ff4f81">
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            mt={3}
+            mb={2}
+            color="#ff4f81"
+          >
             Recent Activity
           </Typography>
           {loadingActivities ? (

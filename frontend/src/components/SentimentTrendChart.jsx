@@ -11,14 +11,21 @@ import {
   Filler,
 } from "chart.js";
 
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, Filler);
+ChartJS.register(
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 export default function SentimentTrendChart({ data }) {
   const chartRef = useRef();
-  
+
   useEffect(() => {
-    if (!chartRef.current) 
-      return;
+    if (!chartRef.current) return;
 
     const chart = chartRef.current;
     const ctx = chart.ctx;
@@ -98,9 +105,14 @@ export default function SentimentTrendChart({ data }) {
         display: true,
         position: "bottom",
         labels: {
-          font: { family: "Orbitron, Montserrat, sans-serif", size: 16, weight: "bold" },
+          font: {
+            family: "Orbitron, Montserrat, sans-serif",
+            size: 16,
+            weight: "bold",
+          },
           generateLabels: (chart) => {
-            const original = ChartJS.defaults.plugins.legend.labels.generateLabels;
+            const original =
+              ChartJS.defaults.plugins.legend.labels.generateLabels;
             const labels = original(chart);
             const colorMap = ["#00e676", "#FFC53D", "#C11C5E"];
             return labels.map((label, i) => ({
@@ -111,7 +123,7 @@ export default function SentimentTrendChart({ data }) {
               font: {
                 family: "Orbitron, Montserrat, sans-serif",
                 size: 16,
-                weight: "bold"
+                weight: "bold",
               },
               color: colorMap[i],
             }));
@@ -135,12 +147,22 @@ export default function SentimentTrendChart({ data }) {
     },
     scales: {
       x: {
-        title: { display: true, text: "Month", color: "#C11C5E", font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Month",
+          color: "#C11C5E",
+          font: { size: 16 },
+        },
         ticks: { color: "#C11C5E", font: { size: 14 } },
         grid: { color: "rgba(255, 255, 255, 0)" },
       },
       y: {
-        title: { display: true, text: "Count", color: "#C11C5E", font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Count",
+          color: "#C11C5E",
+          font: { size: 16 },
+        },
         beginAtZero: true,
         precision: 0,
         ticks: { color: "#C11C5E", font: { size: 14 }, stepSize: 1 },
@@ -164,7 +186,13 @@ export default function SentimentTrendChart({ data }) {
         margin: "32px 0",
       }}
     >
-      <Line ref={chartRef} data={chartData} options={options} width={1000} height={400} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        width={1000}
+        height={400}
+      />
     </div>
   );
 }

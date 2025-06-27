@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { setTokenCookie, getTokenCookie, removeTokenCookie } from "../api";
 
 export const UserContext = createContext();
 
@@ -8,7 +9,7 @@ export const UserProvider = ({ children }) => {
       return raw ? JSON.parse(raw) : null;
     });
     const [rememberMe, setRememberMe] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(() => !!(localStorage.getItem("token") || sessionStorage.getItem("token")));
+    const [isAuthenticated, setIsAuthenticated] = useState(() => !!getTokenCookie());
 
     useEffect(() => {
       if (user) {
@@ -19,22 +20,22 @@ export const UserProvider = ({ children }) => {
     }, [user, rememberMe]);
 
     useEffect(() => {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const token = getTokenCookie();
       setIsAuthenticated(!!token);
     }, []);
   
-    const login = (userData, remember = false) => {
+    const login = (userData, remember = false, token = null) => {
       setRememberMe(remember);
       setUser(userData);
       setIsAuthenticated(true);
+      if (token) setTokenCookie(token, remember);
     };
 
     const logout = () => {
       setUser(null);
       setIsAuthenticated(false);
-      localStorage.removeItem("token");
+      removeTokenCookie();
       localStorage.removeItem("user");
-      sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
     };
   

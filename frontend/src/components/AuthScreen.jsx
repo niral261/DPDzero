@@ -13,10 +13,9 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { API_URL } from "../api";
+import { API_URL, setTokenCookie, getTokenCookie } from "../api";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserProvider";
-
 
 const gradientBg = {
   minHeight: "100vh",
@@ -26,12 +25,10 @@ const gradientBg = {
   background: "linear-gradient(135deg, #5b9cff 30%, #ffe066 70%)",
 };
 
-
 const roles = [
   { value: "manager", label: "Manager" },
   { value: "employee", label: "Employee" },
 ];
-
 
 const AuthScreen = ({ isUserAuthenticated }) => {
   const [tab, setTab] = useState(0);
@@ -43,13 +40,17 @@ const AuthScreen = ({ isUserAuthenticated }) => {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const navigate = useNavigate();
 
-  const { login }  = useContext(UserContext);
+  const { login } = useContext(UserContext);
 
   const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') return;
+    if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
 
@@ -66,34 +67,40 @@ const AuthScreen = ({ isUserAuthenticated }) => {
           }),
         });
         const data = await res.json();
-        
-        if (!res.ok) 
-          throw new Error(data.detail || "Login failed");
 
-        if(remember){
-          localStorage.setItem("token", data.access_token);
+        if (!res.ok) throw new Error(data.detail || "Login failed");
+
+        if (remember) {
+          setTokenCookie(data.access_token, true);
         } else {
-          sessionStorage.setItem("token", data.access_token);
+          setTokenCookie(data.access_token, false);
         }
-        setSnackbar({ open: true, message: "Login successful!", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Login successful!💘",
+          severity: "success",
+        });
         isUserAuthenticated(true);
-        
-        localStorage.setItem("token", data.access_token);
+
         localStorage.setItem("user", JSON.stringify(data));
 
-        login({
-          name: data.name,
-          role: data.role,
-          id: data.id
-        }, remember)
+        login(
+          {
+            name: data.name,
+            role: data.role,
+            id: data.id,
+          },
+          remember
+        );
 
-        if(data.role === "manager")
-          navigate("/manager/dashboard")
-        else if(data.role === "employee")
-          navigate("/employee/dashboard")
-
+        if (data.role === "manager") navigate("/manager/dashboard");
+        else if (data.role === "employee") navigate("/employee/dashboard");
       } catch (err) {
-        setSnackbar({ open: true, message: err.message, severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Sorry💔 User not found",
+          severity: "error",
+        });
       }
     } else {
       try {
@@ -109,9 +116,12 @@ const AuthScreen = ({ isUserAuthenticated }) => {
           }),
         });
         const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.detail || "Signup failed");
-        setSnackbar({ open: true, message: "Signup successful! Please login.", severity: "success" });
+        if (!res.ok) throw new Error(data.detail || "Signup failed");
+        setSnackbar({
+          open: true,
+          message: "Signup successful! Please login.",
+          severity: "success",
+        });
         setTab(0);
       } catch (err) {
         setSnackbar({ open: true, message: err.message, severity: "error" });
@@ -356,9 +366,15 @@ const AuthScreen = ({ isUserAuthenticated }) => {
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }} elevation={6} variant="filled">
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          elevation={6}
+          variant="filled"
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

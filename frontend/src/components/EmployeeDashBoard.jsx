@@ -1,13 +1,9 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Box, Typography, Paper, Button, Snackbar, Alert } from "@mui/material";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import GroupIcon from "@mui/icons-material/Group";
-import ChatIcon from "@mui/icons-material/Chat";
-import SettingsIcon from "@mui/icons-material/Settings";
 import HeaderBar from "./HeaderBar";
 import VerticalSidebar from "./VerticalSidebar";
 import { UserContext } from "../context/UserProvider";
-import { API_URL } from "../api";
+import { API_URL, getTokenCookie } from "../api";
 import FeedbackHistoryDialog from "./FeedbackHistoryDialog";
 
 export default function EmployeeDashboard() {
@@ -36,7 +32,7 @@ export default function EmployeeDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getTokenCookie()}`,
         },
         body: JSON.stringify({ member: user.name }),
       });
@@ -58,7 +54,7 @@ export default function EmployeeDashboard() {
       const res = await fetch(`${API_URL}/feedback/${feedbackId}/acknowledge`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getTokenCookie()}`,
         },
       });
       if (!res.ok) throw new Error("Failed to acknowledge feedback");
@@ -81,7 +77,7 @@ export default function EmployeeDashboard() {
     try {
       const res = await fetch(`${API_URL}/feedback/${feedbackId}/export-pdf`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${getTokenCookie()}`,
         },
       });
       if (!res.ok) throw new Error("Failed to export PDF");
@@ -108,7 +104,7 @@ export default function EmployeeDashboard() {
           localStorage.getItem("token") || sessionStorage.getItem("token");
         const headers = {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getTokenCookie()}`,
         };
         const [
           feedbackReceivedRes,
@@ -157,7 +153,7 @@ export default function EmployeeDashboard() {
           `${API_URL}/employee/${encodeURIComponent(user.name)}/feedbacks`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${getTokenCookie()}`,
             },
           }
         );
@@ -384,7 +380,7 @@ export default function EmployeeDashboard() {
           </Box>
         </Box>
 
-        <Box 
+        <Box
           sx={{
             border: "1px solid #e0e0e0",
             borderRadius: 3,
@@ -658,7 +654,9 @@ export default function EmployeeDashboard() {
       <FeedbackHistoryDialog
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
-        feedbacks={[...feedbacks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))}
+        feedbacks={[...feedbacks].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        )}
       />
     </Box>
   );

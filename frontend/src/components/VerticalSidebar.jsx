@@ -6,32 +6,31 @@ import ChatIcon from "@mui/icons-material/Chat";
 import LogoutIcon from "@mui/icons-material/Logout";
 import FeedbackHistoryDialog from "./FeedbackHistoryDialog";
 import { UserContext } from "../context/UserProvider";
-import { API_URL } from "../api";
+import { API_URL, getTokenCookie, removeTokenCookie } from "../api";
 
 const sidebarItems = [
-  { 
-    icon: <DashboardIcon fontSize="small" />, 
-    label: "Dashboard" 
+  {
+    icon: <DashboardIcon fontSize="small" />,
+    label: "Dashboard",
   },
-  { 
-    icon: <GroupIcon fontSize="small" />, 
-    label: "Team" 
+  {
+    icon: <GroupIcon fontSize="small" />,
+    label: "Team",
   },
-  { 
-    icon: <ChatIcon fontSize="small" />, 
+  {
+    icon: <ChatIcon fontSize="small" />,
     label: "Feedback",
-    isFeedback: true 
+    isFeedback: true,
   },
-  { 
-    icon: <LogoutIcon fontSize="small" />, 
-    label: "Logout", 
-    isLogout: true 
+  {
+    icon: <LogoutIcon fontSize="small" />,
+    label: "Logout",
+    isLogout: true,
   },
 ];
 
 const handleLogout = () => {
-  localStorage.removeItem("token");
-  sessionStorage.removeItem("token");
+  removeTokenCookie();
   window.location.reload();
 };
 
@@ -52,7 +51,7 @@ export default function VerticalSidebar({ activeIndex = 0 }) {
     }
     try {
       const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${getTokenCookie()}` },
       });
       const data = await res.json();
       setFeedbacks(Array.isArray(data) ? data : []);
@@ -100,7 +99,13 @@ export default function VerticalSidebar({ activeIndex = 0 }) {
                 cursor: "pointer",
                 transition: "none",
               }}
-              onClick={item.isLogout ? handleLogout : item.isFeedback ? handleFeedbackClick : undefined}
+              onClick={
+                item.isLogout
+                  ? handleLogout
+                  : item.isFeedback
+                  ? handleFeedbackClick
+                  : undefined
+              }
             >
               {item.icon}
             </Box>
@@ -110,7 +115,9 @@ export default function VerticalSidebar({ activeIndex = 0 }) {
       <FeedbackHistoryDialog
         open={feedbackDialogOpen}
         onClose={() => setFeedbackDialogOpen(false)}
-        feedbacks={[...feedbacks].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))}
+        feedbacks={[...feedbacks].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        )}
         loading={loading}
       />
     </>

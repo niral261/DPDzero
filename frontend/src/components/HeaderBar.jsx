@@ -1,9 +1,9 @@
-import React, { useContext} from "react";
+import React, { useContext } from "react";
 import { Box, Typography, Avatar } from "@mui/material";
 import { UserContext } from "../context/UserProvider";
 
 export default function HeaderBar({ headerButton }) {
-  const  { user, logout } = useContext(UserContext);
+  const { user, logout } = useContext(UserContext);
 
   return (
     <Box
@@ -35,10 +35,10 @@ export default function HeaderBar({ headerButton }) {
           WebkitTextFillColor: "transparent",
           backgroundSize: "200% 200%",
           animation: "shimmer 2s linear infinite",
-          '@keyframes shimmer': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '100%': { backgroundPosition: '100% 50%' },
-          }
+          "@keyframes shimmer": {
+            "0%": { backgroundPosition: "0% 50%" },
+            "100%": { backgroundPosition: "100% 50%" },
+          },
         }}
       >
         Workplace Vibe
@@ -70,4 +70,4 @@ export default function HeaderBar({ headerButton }) {
       </Box>
     </Box>
   );
-} 
+}

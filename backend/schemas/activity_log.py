@@ -9,6 +9,7 @@ class ActivityLogCreate(BaseModel):
     target: str | None = None
     details: dict | None = None
 
+
 class ActivityLogSchema(BaseModel):
     id: int
     user_id: int
