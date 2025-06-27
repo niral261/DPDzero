@@ -30,53 +30,60 @@ const theme = createTheme({
 
 function App() {
   const [isAuthenticated, isUserAuthenticated] = useState(false);
-  const { user } = useContext(UserContext);
 
   return (
     <ThemeProvider theme={theme}>
       <UserProvider>
-        <Router>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? (
-                  user && user.role === "manager" ? (
-                    <Navigate to="/manager/dashboard" replace />
-                  ) : user && user.role === "employee" ? (
-                    <Navigate to="/employee/dashboard" replace />
-                  ) : (
-                    <Navigate to="/signin" replace />
-                  )
-                ) : (
-                  <Navigate to="/signin" replace />
-                )
-              }
-            />
-            <Route
-              path="/signin"
-              element={<AuthScreen isUserAuthenticated={isUserAuthenticated} />}
-            />
-            <Route
-              path="/manager/dashboard"
-              element={
-                <PrivateRoute isAuthenticated={isAuthenticated}>
-                  <ManagerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/employee/dashboard"
-              element={
-                <PrivateRoute isAuthenticated={isAuthenticated}>
-                  <EmployeeDashboard />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </Router>
+        <AppRoutes isAuthenticated={isAuthenticated} isUserAuthenticated={isUserAuthenticated} />
       </UserProvider>
     </ThemeProvider>
+  );
+}
+
+function AppRoutes({ isAuthenticated, isUserAuthenticated }) {
+  const { user } = useContext(UserContext);
+
+  return (
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              user && user.role === "manager" ? (
+                <Navigate to="/manager/dashboard" replace />
+              ) : user && user.role === "employee" ? (
+                <Navigate to="/employee/dashboard" replace />
+              ) : (
+                <Navigate to="/signin" replace />
+              )
+            ) : (
+              <Navigate to="/signin" replace />
+            )
+          }
+        />
+        <Route
+          path="/signin"
+          element={<AuthScreen isUserAuthenticated={isUserAuthenticated} />}
+        />
+        <Route
+          path="/manager/dashboard"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <ManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/employee/dashboard"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <EmployeeDashboard />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 
