@@ -1,7 +1,13 @@
+import os
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from jose import jwt, JWTError
-from routers.auth import SECRET_KEY, ALGORITHM
+from routers.auth import ALGORITHM
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 EXCLUDE_PATHS = {"/login", "/signup", "/docs"}
 
