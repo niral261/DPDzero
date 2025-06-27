@@ -414,10 +414,16 @@ async def manager_sentiment_trends(manager_id: int, db: AsyncSession = Depends(g
 
 @router.get("/feedback/{feedback_id}/export-pdf")
 async def export_feedback_pdf(feedback_id: int, db: AsyncSession = Depends(get_db)):
+    manager_result = await db.execute(select(User).where(User.id == feedback.given_by))
+    manager = manager_result.scalar_one_or_none()
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+    
     result = await db.execute(select(Feedback).where(Feedback.id == feedback_id))
     feedback = result.scalar_one_or_none()
     if not feedback:
         raise HTTPException(status_code=404, detail="Feedback not found")
+    
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     p.setFont("Helvetica-Bold", 16)
@@ -435,7 +441,7 @@ async def export_feedback_pdf(feedback_id: int, db: AsyncSession = Depends(get_d
     tags = feedback.tags if isinstance(feedback.tags, list) else []
     p.drawString(72, y, f"Tags: {', '.join(tags) if tags else '-'}")
     y -= 20
-    p.drawString(72, y, f"Given By (User ID): {feedback.given_by}")
+    p.drawString(72, y, f"Given By: {manager.name}")
     y -= 20
     p.drawString(
         72, y, f"Acknowledged: {'Yes' if bool(feedback.acknowledged) else 'No'}"
